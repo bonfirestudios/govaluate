@@ -35,6 +35,9 @@ func (this dummyParameter) AlwaysFail() (interface{}, error) {
 	return nil, errors.New("function should always fail")
 }
 
+func (this dummyParameter) NoReturn() {
+}
+
 type dummyNestedParameter struct {
 	Funk string
 }

@@ -326,7 +326,8 @@ func makeAccessorStage(pair []string) evaluationOperator {
 			retLength := len(returned)
 
 			if retLength == 0 {
-				return nil, errors.New("Method call '" + pair[i-1] + "." + pair[i] + "' did not return any values.")
+				value = nil
+				continue
 			}
 
 			if retLength == 1 {

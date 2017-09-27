@@ -1309,6 +1309,13 @@ func TestParameterizedEvaluation(test *testing.T) {
 		},
 		EvaluationTest{
 
+			Name:       "Simple parameter function call no return",
+			Input:      "fooptr.NoReturn()",
+			Parameters: []EvaluationParameter{fooPtrParameter},
+			Expected:   nil,
+		},
+		EvaluationTest{
+
 			Name:       "Simple parameter call",
 			Input:      "foo.String == 'hi'",
 			Parameters: []EvaluationParameter{fooParameter},
