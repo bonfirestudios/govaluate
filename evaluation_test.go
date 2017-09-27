@@ -1365,6 +1365,24 @@ func TestParameterizedEvaluation(test *testing.T) {
 		},
 		EvaluationTest{
 
+			Name:  "Getting value from maps and concatenating with a constant",
+			Input: "foo.Bar.key + 'a'",
+			Parameters: []EvaluationParameter{
+				EvaluationParameter{
+					Name: "foo",
+					Value: struct {
+						Bar map[string]string
+					}{
+						map[string]string{
+							"key": "value",
+						},
+					},
+				},
+			},
+			Expected: "valuea",
+		},
+		EvaluationTest{
+
 			Name:       "Parameter call with + modifier",
 			Input:      "1 + foo.Int",
 			Parameters: []EvaluationParameter{fooParameter},

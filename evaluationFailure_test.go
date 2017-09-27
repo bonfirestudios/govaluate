@@ -32,7 +32,7 @@ const (
 	INVALID_TERNARY_TYPES           = "cannot be used with the ternary operator"
 	ABSENT_PARAMETER                = "No parameter"
 	INVALID_REGEX                   = "Unable to compile regexp pattern"
-	INVALID_PARAMETER_CALL          = "No method or field"
+	INVALID_PARAMETER_CALL          = "No parameter/field/method"
 	TOO_FEW_ARGS                    = "reflect: Call with too few input arguments"
 	TOO_MANY_ARGS                   = "reflect: Call with too many input arguments"
 	MISMATCHED_PARAMETERS           = "reflect: Call using"
@@ -461,6 +461,21 @@ func TestInvalidParameterCalls(test *testing.T) {
 			Input:      "foo.Nested.NotExists",
 			Parameters: fooFailureParameters,
 			Expected:   INVALID_PARAMETER_CALL,
+		},
+		EvaluationFailureTest{
+
+			Name:  "Missing parameter in map",
+			Input: "foo.Bar.nonexisting + 'a'",
+			Parameters: map[string]interface{}{
+				"foo": struct {
+					Bar map[string]string
+				}{
+					map[string]string{
+						"key": "value",
+					},
+				},
+			},
+			Expected: INVALID_PARAMETER_CALL,
 		},
 		EvaluationFailureTest{
 
