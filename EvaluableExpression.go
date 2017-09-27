@@ -222,8 +222,16 @@ func (this EvaluableExpression) evaluateStage(stage *evaluationStage, parameters
 			}
 		} else {
 			// special case where the type check needs to know both sides to determine if the operator can handle it
-			if !stage.typeCheck(left, right) {
+			switch stage.typeCheck(left, right) {
+			case stageCombinedTypeCheckResultBothValid:
+			case stageCombinedTypeCheckResultLeftInvalid:
 				errorMsg := fmt.Sprintf(stage.typeErrorFormat, left, stage.symbol.String())
+				return nil, errors.New(errorMsg)
+			case stageCombinedTypeCheckResultRightInvalid:
+				errorMsg := fmt.Sprintf(stage.typeErrorFormat, right, stage.symbol.String())
+				return nil, errors.New(errorMsg)
+			case stageCombinedTypeCheckResultBothInvalid:
+				errorMsg := fmt.Sprintf(stage.typeErrorFormat, fmt.Sprintf("%v %v %v", left, stage.symbol.String(), right), stage.symbol.String())
 				return nil, errors.New(errorMsg)
 			}
 		}

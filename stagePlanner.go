@@ -707,7 +707,7 @@ func elideStage(root *evaluationStage) *evaluationStage {
 		return root
 	}
 
-	if root.typeCheck != nil && !root.typeCheck(leftValue, rightValue) {
+	if root.typeCheck != nil && root.typeCheck(leftValue, rightValue) != stageCombinedTypeCheckResultBothValid {
 		return root
 	}
 

@@ -17,9 +17,18 @@ const (
 	prefixErrorFormat     string = "Value '%v' cannot be used with the prefix '%v'"
 )
 
+type stageCombinedTypeCheckResult int
+
+const (
+	stageCombinedTypeCheckResultBothValid stageCombinedTypeCheckResult = iota
+	stageCombinedTypeCheckResultLeftInvalid
+	stageCombinedTypeCheckResultRightInvalid
+	stageCombinedTypeCheckResultBothInvalid
+)
+
 type evaluationOperator func(left interface{}, right interface{}, parameters Parameters) (interface{}, error)
 type stageTypeCheck func(value interface{}) bool
-type stageCombinedTypeCheck func(left interface{}, right interface{}) bool
+type stageCombinedTypeCheck func(left interface{}, right interface{}) stageCombinedTypeCheckResult
 
 type evaluationStage struct {
 	symbol OperatorSymbol
@@ -419,34 +428,66 @@ func isFloat64(value interface{}) bool {
 	return false
 }
 
+func isNil(value interface{}) bool {
+	switch value.(type) {
+	case nil:
+		return true
+	}
+	return false
+}
+
 /*
 	Addition usually means between numbers, but can also mean string concat.
 	String concat needs one (or both) of the sides to be a string.
 */
-func additionTypeCheck(left interface{}, right interface{}) bool {
-
+func additionTypeCheck(left interface{}, right interface{}) stageCombinedTypeCheckResult {
+	if isNil(left) {
+		return stageCombinedTypeCheckResultLeftInvalid
+	}
+	if isNil(right) {
+		return stageCombinedTypeCheckResultRightInvalid
+	}
 	if isFloat64(left) && isFloat64(right) {
-		return true
+		return stageCombinedTypeCheckResultBothValid
 	}
 	if !isString(left) && !isString(right) {
-		return false
+		return stageCombinedTypeCheckResultBothInvalid
 	}
-	return true
+	return stageCombinedTypeCheckResultBothValid
 }
 
 /*
 	Comparison can either be between numbers, or lexicographic between two strings,
 	but never between the two.
 */
-func comparatorTypeCheck(left interface{}, right interface{}) bool {
+func comparatorTypeCheck(left interface{}, right interface{}) stageCombinedTypeCheckResult {
 
-	if isFloat64(left) && isFloat64(right) {
-		return true
+	if isNil(left) {
+		return stageCombinedTypeCheckResultLeftInvalid
 	}
-	if isString(left) && isString(right) {
-		return true
+	if isNil(right) {
+		return stageCombinedTypeCheckResultRightInvalid
 	}
-	return false
+
+	leftString := isString(left)
+	rightString := isString(right)
+
+	leftFloat64 := isFloat64(left)
+	rightFloat64 := isFloat64(right)
+
+	leftValid := leftFloat64 || leftString
+	rightValid := rightFloat64 || rightString
+
+	if !leftValid && !rightValid {
+		return stageCombinedTypeCheckResultBothInvalid
+	} else if !leftValid {
+		return stageCombinedTypeCheckResultLeftInvalid
+	} else if !rightValid {
+		return stageCombinedTypeCheckResultRightInvalid
+	} else if (leftString && !rightString) || (leftFloat64 && !rightFloat64) {
+		return stageCombinedTypeCheckResultRightInvalid
+	}
+	return stageCombinedTypeCheckResultBothValid
 }
 
 func isArray(value interface{}) bool {

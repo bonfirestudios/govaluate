@@ -490,6 +490,20 @@ func TestInvalidParameterCalls(test *testing.T) {
 			Parameters: fooFailureParameters,
 			Expected:   MISMATCHED_PARAMETERS,
 		},
+		EvaluationFailureTest{
+
+			Name:       "Simple parameter function call no return with modifier",
+			Input:      "foo.NoReturn() + 1",
+			Parameters: fooFailureParameters,
+			Expected:   INVALID_MODIFIER_TYPES,
+		},
+		EvaluationFailureTest{
+
+			Name:       "Simple parameter function call no return with modifier reversed",
+			Input:      "1 + foo.NoReturn()",
+			Parameters: fooFailureParameters,
+			Expected:   INVALID_MODIFIER_TYPES,
+		},
 	}
 
 	runEvaluationFailureTests(evaluationTests, test)
