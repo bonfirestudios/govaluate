@@ -375,14 +375,14 @@ func makeAccessorStage(pair []string) evaluationOperator {
 				}
 
 				method = coreValue.MethodByName(pair[i])
+			}
 
+			if method == (reflect.Value{}) {
+				if corePtrVal.IsValid() {
+					method = corePtrVal.MethodByName(pair[i])
+				}
 				if method == (reflect.Value{}) {
-					if corePtrVal.IsValid() {
-						method = corePtrVal.MethodByName(pair[i])
-					}
-					if method == (reflect.Value{}) {
-						return nil, newMissingParameterError(pair[i], pair[i-1])
-					}
+					return nil, newMissingParameterError(pair[i], pair[i-1])
 				}
 			}
 
