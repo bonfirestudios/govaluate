@@ -335,41 +335,54 @@ func makeAccessorStage(pair []string) evaluationOperator {
 				coreValue = coreValue.Elem()
 			}
 
+			var method reflect.Value
+
 			// if this is a map, get the corresponding key
 			if coreValue.Kind() == reflect.Map {
 				key := reflect.ValueOf(pair[i])
 				mapValue := coreValue.MapIndex(key)
 				if mapValue.IsValid() {
-					value = mapValue.Interface()
+					if mapValue.Kind() == reflect.Interface {
+						mapValue = reflect.ValueOf(mapValue.Interface())
+					}
+					if mapValue.Kind() == reflect.Func {
+						method = mapValue
+					} else {
+						value = mapValue.Interface()
+						continue
+					}
+				} else {
+					return nil, newMissingParameterError(pair[i], pair[i-1])
+				}
+			}
+
+			if !method.IsValid() {
+				if coreValue.Kind() != reflect.Struct {
+					return nil, errors.New("Unable to access '" + pair[i] + "', '" + pair[i-1] + "' is not a struct")
+				}
+
+				// check that field is not unexported
+				firstCharacter := getFirstRune(pair[i])
+				if unicode.ToUpper(firstCharacter) != firstCharacter {
+					errorMsg := fmt.Sprintf("Unable to access unexported field '%s'", pair[i])
+					return nil, errors.New(errorMsg)
+				}
+
+				field := coreValue.FieldByName(pair[i])
+				if field != (reflect.Value{}) {
+					value = field.Interface()
 					continue
 				}
-				return nil, newMissingParameterError(pair[i], pair[i-1])
-			}
 
-			if coreValue.Kind() != reflect.Struct {
-				return nil, errors.New("Unable to access '" + pair[i] + "', '" + pair[i-1] + "' is not a struct")
-			}
+				method = coreValue.MethodByName(pair[i])
 
-			// check that field is not unexported
-			firstCharacter := getFirstRune(pair[i])
-			if unicode.ToUpper(firstCharacter) != firstCharacter {
-				errorMsg := fmt.Sprintf("Unable to access unexported field '%s'", pair[i])
-				return nil, errors.New(errorMsg)
-			}
-
-			field := coreValue.FieldByName(pair[i])
-			if field != (reflect.Value{}) {
-				value = field.Interface()
-				continue
-			}
-
-			method := coreValue.MethodByName(pair[i])
-			if method == (reflect.Value{}) {
-				if corePtrVal.IsValid() {
-					method = corePtrVal.MethodByName(pair[i])
-				}
 				if method == (reflect.Value{}) {
-					return nil, newMissingParameterError(pair[i], pair[i-1])
+					if corePtrVal.IsValid() {
+						method = corePtrVal.MethodByName(pair[i])
+					}
+					if method == (reflect.Value{}) {
+						return nil, newMissingParameterError(pair[i], pair[i-1])
+					}
 				}
 			}
 

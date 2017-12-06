@@ -3,6 +3,7 @@ package govaluate
 import (
 	"errors"
 	"fmt"
+	"math"
 	"regexp"
 	"testing"
 	"time"
@@ -1388,6 +1389,20 @@ func TestParameterizedEvaluation(test *testing.T) {
 				},
 			},
 			Expected: "valuea",
+		},
+		EvaluationTest{
+
+			Name:  "Call function from map",
+			Input: "math.Sqrt(4.0)",
+			Parameters: []EvaluationParameter{
+				EvaluationParameter{
+					Name: "math",
+					Value: map[string]interface{}{
+						"Sqrt": math.Sqrt,
+					},
+				},
+			},
+			Expected: 2.0,
 		},
 		EvaluationTest{
 
